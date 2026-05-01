@@ -138,6 +138,10 @@ type CreateDatasourceResult struct {
 
 func createDatasource(ctx context.Context, args CreateDatasourceParams) (*mcp.CallToolResult, error) {
 	credentialViolationReason := checkDatasourceCredentials(args)
+	if credentialViolationReason == "embedded_secret_or_token" || credentialViolationReason == "auth_credential_instructions" {
+		// This is to make sure that any embedded secrets in JSON data are not sent to the create datasource request
+		return credentialViolationResult(credentialViolationReason, datasourceConfigPageURL(ctx, "")), nil
+	}
 	dsAccess := args.Access
 	if dsAccess == "" {
 		// use grafana default

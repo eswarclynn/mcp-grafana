@@ -286,6 +286,7 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 		name           string
 		params         CreateDatasourceParams
 		expectedReason string
+		redirectOnly   bool
 	}{
 		{
 			name:           "basicAuth enabled",
@@ -311,6 +312,13 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 			name:           "embedded AWS key in jsonData",
 			params:         CreateDatasourceParams{Name: "test", Type: "prometheus", JSONData: map[string]interface{}{"accessKey": "AKIAIOSFODNN7EXAMPLE"}},
 			expectedReason: "embedded_secret_or_token",
+			redirectOnly:   true,
+ 		},
+		{
+			name:           "basicAuth enabled with embedded AWS key in jsonData",
+			params:         CreateDatasourceParams{Name: "test", Type: "prometheus", BasicAuth: true, JSONData: map[string]interface{}{"accessKey": "AKIAIOSFODNN7EXAMPLE"}},
+			expectedReason: "embedded_secret_or_token",
+			redirectOnly:   true,
 		},
 	}
 
@@ -333,6 +341,9 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 			}
 
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if tt.redirectOnly {
+					t.Fatal("should not make any HTTP request when secret-like input is present")
+				}
 				assert.Equal(t, http.MethodPost, r.Method)
 				assert.Equal(t, "/api/datasources", r.URL.Path)
 				var got models.AddDataSourceCommand
@@ -348,8 +359,13 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 			toolResult, err := createDatasource(ctx, tt.params)
 			require.NoError(t, err)
 			require.NotNil(t, toolResult)
-			// Datasource was created; credential redirect is not an error.
-			assert.False(t, toolResult.IsError)
+			if tt.redirectOnly {
+				assert.True(t, toolResult.IsError)
+			} else {
+				// Datasource was created; credential redirect is not an error.
+				assert.False(t, toolResult.IsError)
+			}
+ 
 
 			require.GreaterOrEqual(t, len(toolResult.Content), 1)
 			text, ok := toolResult.Content[0].(mcp.TextContent)
@@ -357,7 +373,16 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 
 			var payload map[string]any
 			require.NoError(t, json.Unmarshal([]byte(text.Text), &payload))
-			assert.Equal(t, "created_without_credentials", payload["outcome"])
+			if tt.redirectOnly {
+				assert.Equal(t, "credential_policy_redirect", payload["outcome"])
+			} else {
+				assert.Equal(t, "created_without_credentials", payload["outcome"])
+			}
+ 			assert.Equal(t, tt.expectedReason, payload["reason"])
+ 
+			if tt.redirectOnly {
+				return
+			}
 			assert.Equal(t, tt.expectedReason, payload["reason"])
 
 			ds, ok := payload["datasource"].(map[string]any)
