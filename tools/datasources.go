@@ -153,7 +153,6 @@ func createDatasource(ctx context.Context, args CreateDatasourceParams) (*mcp.Ca
 		BasicAuth: args.BasicAuth,
 		IsDefault: args.IsDefault,
 		JSONData:  models.JSON(args.JSONData),
-		
 	}
 	resp, err := c.Datasources.AddDataSource(body)
 	if err != nil {

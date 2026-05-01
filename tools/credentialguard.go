@@ -227,11 +227,11 @@ func credentialViolationResult(reason, configURL string) *mcp.CallToolResult {
 // so the user can enter credentials directly.
 func credentialCreatedWithRedirectResult(result *CreateDatasourceResult, reason, configURL string) *mcp.CallToolResult {
 	payload := map[string]any{
-		"outcome":                    "created_without_credentials",
-		"reason":                     reason,
-		"credential_policy":          credentialGuardMessage,
-		"message":                    "Datasource was created without credentials. Open the configuration page to enter them.",
-		"datasource":                 result,
+		"outcome":           "created_without_credentials",
+		"reason":            reason,
+		"credential_policy": credentialGuardMessage,
+		"message":           "Datasource was created without credentials. Open the configuration page to enter them.",
+		"datasource":        result,
 	}
 	// best-effort only for when server is not running remotely.
 	if configURL != "" {
