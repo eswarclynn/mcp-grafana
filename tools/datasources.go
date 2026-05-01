@@ -150,11 +150,13 @@ func createDatasource(ctx context.Context, args CreateDatasourceParams) (*mcp.Ca
 		URL:       args.URL,
 		Access:    models.DsAccess(dsAccess),
 		Database:  args.Database,
-		BasicAuth: args.BasicAuth,
+		BasicAuth: args.BasicAuth && credentialViolationReason == "",
 		IsDefault: args.IsDefault,
 		JSONData:  models.JSON(args.JSONData),
 	}
-	resp, err := c.Datasources.AddDataSource(body)
+	resp, err := c.Datasources.AddDataSourceWithParams(
+		datasources.NewAddDataSourceParamsWithContext(ctx).WithBody(body),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("create datasource: %w", err)
 	}
