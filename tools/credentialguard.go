@@ -103,6 +103,20 @@ func appendJSONDataStringCandidates(candidates []string, value any) []string {
 // It mirrors DatasourceInputCredentialViolation from mcp-manage-datasources.
 // Returns a reason code or "" if no violation.
 func checkDatasourceCredentials(args CreateDatasourceParams) string {
+	// Collect all string field values and jsonData string values for scanning.
+	candidates := []string{args.Name, args.Type, args.URL, args.Access, args.Database, args.User}
+	for _, v := range args.JSONData {
+		candidates = appendJSONDataStringCandidates(candidates, v)
+	}
+	for _, s := range candidates {
+		if strings.TrimSpace(s) == "" {
+			continue
+		}
+		if matchesSecretLike(s) {
+			return "embedded_secret_or_token"
+		}
+	}
+
 	if args.BasicAuth {
 		return "basic_auth_enabled_via_mcp_disallowed"
 	}
@@ -113,20 +127,12 @@ func checkDatasourceCredentials(args CreateDatasourceParams) string {
 		return "secure_json_data_found"
 	}
 
-	// Collect all string field values and jsonData string values for scanning.
-	candidates := []string{args.Name, args.Type, args.URL, args.Access, args.Database, args.User}
-	for _, v := range args.JSONData {
-		candidates = appendJSONDataStringCandidates(candidates, v)
-	}
 	for _, s := range candidates {
 		if strings.TrimSpace(s) == "" {
 			continue
 		}
 		if matchesAuthIntent(s) {
 			return "auth_credential_instructions"
-		}
-		if matchesSecretLike(s) {
-			return "embedded_secret_or_token"
 		}
 	}
 	return ""
