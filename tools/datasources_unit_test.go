@@ -335,6 +335,9 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, http.MethodPost, r.Method)
 				assert.Equal(t, "/api/datasources", r.URL.Path)
+				var got models.AddDataSourceCommand
+				require.NoError(t, json.NewDecoder(r.Body).Decode(&got))
+				assert.False(t, got.BasicAuth)
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_ = json.NewEncoder(w).Encode(mockResp)
