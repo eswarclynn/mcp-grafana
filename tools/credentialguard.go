@@ -103,9 +103,6 @@ func appendJSONDataStringCandidates(candidates []string, value any) []string {
 // It mirrors DatasourceInputCredentialViolation from mcp-manage-datasources.
 // Returns a reason code or "" if no violation.
 func checkDatasourceCredentials(args CreateDatasourceParams) string {
-	if args.BasicAuth {
-		return "basic_auth_enabled_via_mcp_disallowed"
-	}
 	if args.BasicAuthUser != "" {
 		return "basic_auth_user_via_mcp_disallowed"
 	}
