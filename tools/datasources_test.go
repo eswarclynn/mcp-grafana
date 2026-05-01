@@ -183,14 +183,23 @@ func TestCreateDatasourceTools(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NotNil(t, toolResult)
-		assert.True(t, toolResult.IsError)
+		assert.False(t, toolResult.IsError)
 
 		text, ok := toolResult.Content[0].(mcp.TextContent)
 		require.True(t, ok)
 		var payload map[string]any
 		require.NoError(t, json.Unmarshal([]byte(text.Text), &payload))
-		assert.Equal(t, "credential_policy_redirect", payload["outcome"])
+		assert.Equal(t, "created_without_credentials", payload["outcome"])
 		assert.Equal(t, "basic_auth_enabled_via_mcp_disallowed", payload["reason"])
+
+		ds, ok := payload["datasource"].(map[string]any)
+		require.True(t, ok)
+		uid, ok := ds["uid"].(string)
+		require.True(t, ok)
+		c := mcpgrafana.GrafanaClientFromContext(ctx)
+		t.Cleanup(func() {
+			_, _ = c.Datasources.DeleteDataSourceByUID(uid)
+		})
 	})
 
 	t.Run("create datasource - secureJsonData blocked", func(t *testing.T) {
@@ -203,13 +212,22 @@ func TestCreateDatasourceTools(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.NotNil(t, toolResult)
-		assert.True(t, toolResult.IsError)
+		assert.False(t, toolResult.IsError)
 
 		text, ok := toolResult.Content[0].(mcp.TextContent)
 		require.True(t, ok)
 		var payload map[string]any
 		require.NoError(t, json.Unmarshal([]byte(text.Text), &payload))
-		assert.Equal(t, "credential_policy_redirect", payload["outcome"])
+		assert.Equal(t, "created_without_credentials", payload["outcome"])
 		assert.Equal(t, "secure_json_data_found", payload["reason"])
+
+		ds, ok := payload["datasource"].(map[string]any)
+		require.True(t, ok)
+		uid, ok := ds["uid"].(string)
+		require.True(t, ok)
+		c := mcpgrafana.GrafanaClientFromContext(ctx)
+		t.Cleanup(func() {
+			_, _ = c.Datasources.DeleteDataSourceByUID(uid)
+		})
 	})
 }
