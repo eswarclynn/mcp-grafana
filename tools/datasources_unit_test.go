@@ -316,8 +316,28 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			id := int64(1)
+			uid := "created-ds-uid"
+			dsName := tt.params.Name
+			msg := "Datasource added"
+			mockResp := models.AddDataSourceOKBody{
+				ID:      &id,
+				Name:    &dsName,
+				Message: &msg,
+				Datasource: &models.DataSource{
+					ID:   id,
+					UID:  uid,
+					Name: dsName,
+					Type: tt.params.Type,
+				},
+			}
+
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				t.Fatal("credential guard should prevent any HTTP request")
+				assert.Equal(t, http.MethodPost, r.Method)
+				assert.Equal(t, "/api/datasources", r.URL.Path)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_ = json.NewEncoder(w).Encode(mockResp)
 			}))
 			defer srv.Close()
 
@@ -326,7 +346,8 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 			toolResult, err := createDatasource(ctx, tt.params)
 			require.NoError(t, err)
 			require.NotNil(t, toolResult)
-			assert.True(t, toolResult.IsError)
+			// Datasource was created; credential redirect is not an error.
+			assert.False(t, toolResult.IsError)
 
 			require.GreaterOrEqual(t, len(toolResult.Content), 1)
 			text, ok := toolResult.Content[0].(mcp.TextContent)
@@ -334,8 +355,12 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 
 			var payload map[string]any
 			require.NoError(t, json.Unmarshal([]byte(text.Text), &payload))
-			assert.Equal(t, "credential_policy_redirect", payload["outcome"])
+			assert.Equal(t, "created_without_credentials", payload["outcome"])
 			assert.Equal(t, tt.expectedReason, payload["reason"])
+
+			ds, ok := payload["datasource"].(map[string]any)
+			require.True(t, ok)
+			assert.Equal(t, uid, ds["uid"])
 		})
 	}
 }

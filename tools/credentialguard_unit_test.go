@@ -477,3 +477,86 @@ func TestCredentialViolationResult(t *testing.T) {
 		assert.True(t, exists, "config_page_opened must always be present in the payload")
 	})
 }
+
+// ---- credentialCreatedWithRedirectResult ----
+
+func TestCredentialCreatedWithRedirectResult(t *testing.T) {
+	t.Run("not an error since datasource was created", func(t *testing.T) {
+		result := credentialCreatedWithRedirectResult(
+			&CreateDatasourceResult{UID: "abc"},
+			"secure_json_data_found",
+			"https://grafana.example.com/connections/datasources/edit/abc",
+		)
+		assert.False(t, result.IsError)
+	})
+
+	t.Run("with config URL has text and resource link", func(t *testing.T) {
+		configURL := "https://grafana.example.com/connections/datasources/edit/abc-123"
+		result := credentialCreatedWithRedirectResult(
+			&CreateDatasourceResult{ID: 42, UID: "abc-123", Name: "My DS"},
+			"secure_json_data_found",
+			configURL,
+		)
+
+		require.Len(t, result.Content, 2)
+
+		text, ok := result.Content[0].(mcp.TextContent)
+		require.True(t, ok)
+		var payload map[string]any
+		require.NoError(t, json.Unmarshal([]byte(text.Text), &payload))
+		assert.Equal(t, "created_without_credentials", payload["outcome"])
+		assert.Equal(t, "secure_json_data_found", payload["reason"])
+		assert.Equal(t, configURL, payload["configure_credentials_url"])
+
+		link, ok := result.Content[1].(mcp.ResourceLink)
+		require.True(t, ok)
+		assert.Equal(t, configURL, link.URI)
+	})
+
+	t.Run("without config URL has text only", func(t *testing.T) {
+		result := credentialCreatedWithRedirectResult(
+			&CreateDatasourceResult{UID: "abc"},
+			"secure_json_data_found",
+			"",
+		)
+
+		require.Len(t, result.Content, 1)
+		_, ok := result.Content[0].(mcp.TextContent)
+		assert.True(t, ok)
+	})
+
+	t.Run("datasource details included in payload", func(t *testing.T) {
+		dsResult := &CreateDatasourceResult{ID: 99, UID: "my-uid", Name: "My Prometheus", Message: "Datasource added"}
+		result := credentialCreatedWithRedirectResult(
+			dsResult,
+			"basic_auth_enabled_via_mcp_disallowed",
+			"https://grafana.example.com/connections/datasources/edit/my-uid",
+		)
+
+		text, ok := result.Content[0].(mcp.TextContent)
+		require.True(t, ok)
+		var payload map[string]any
+		require.NoError(t, json.Unmarshal([]byte(text.Text), &payload))
+
+		ds, ok := payload["datasource"].(map[string]any)
+		require.True(t, ok)
+		assert.Equal(t, "my-uid", ds["uid"])
+		assert.Equal(t, "My Prometheus", ds["name"])
+	})
+
+	t.Run("config_page_opened present when config URL provided", func(t *testing.T) {
+		configURL := "https://grafana.example.com/connections/datasources/edit/abc"
+		result := credentialCreatedWithRedirectResult(
+			&CreateDatasourceResult{UID: "abc"},
+			"secure_json_data_found",
+			configURL,
+		)
+
+		text, ok := result.Content[0].(mcp.TextContent)
+		require.True(t, ok)
+		var payload map[string]any
+		require.NoError(t, json.Unmarshal([]byte(text.Text), &payload))
+		_, exists := payload["config_page_opened"]
+		assert.True(t, exists, "config_page_opened must be present when a URL is provided")
+	})
+}
