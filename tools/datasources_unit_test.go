@@ -313,7 +313,7 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 			params:         CreateDatasourceParams{Name: "test", Type: "prometheus", JSONData: map[string]interface{}{"accessKey": "AKIAIOSFODNN7EXAMPLE"}},
 			expectedReason: "embedded_secret_or_token",
 			redirectOnly:   true,
- 		},
+		},
 		{
 			name:           "basicAuth enabled with embedded AWS key in jsonData",
 			params:         CreateDatasourceParams{Name: "test", Type: "prometheus", BasicAuth: true, JSONData: map[string]interface{}{"accessKey": "AKIAIOSFODNN7EXAMPLE"}},
@@ -365,7 +365,6 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 				// Datasource was created; credential redirect is not an error.
 				assert.False(t, toolResult.IsError)
 			}
- 
 
 			require.GreaterOrEqual(t, len(toolResult.Content), 1)
 			text, ok := toolResult.Content[0].(mcp.TextContent)
@@ -378,8 +377,8 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 			} else {
 				assert.Equal(t, "created_without_credentials", payload["outcome"])
 			}
- 			assert.Equal(t, tt.expectedReason, payload["reason"])
- 
+			assert.Equal(t, tt.expectedReason, payload["reason"])
+
 			if tt.redirectOnly {
 				return
 			}
