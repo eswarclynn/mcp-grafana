@@ -137,9 +137,7 @@ type CreateDatasourceResult struct {
 }
 
 func createDatasource(ctx context.Context, args CreateDatasourceParams) (*mcp.CallToolResult, error) {
-	if reason := checkDatasourceCredentials(args); reason != "" {
-		return credentialViolationResult(reason, datasourceConfigPageURL(ctx, "")), nil
-	}
+	credentialViolationReason := checkDatasourceCredentials(args)
 	dsAccess := args.Access
 	if dsAccess == "" {
 		// use grafana default
@@ -147,17 +145,15 @@ func createDatasource(ctx context.Context, args CreateDatasourceParams) (*mcp.Ca
 	}
 	c := mcpgrafana.GrafanaClientFromContext(ctx)
 	body := &models.AddDataSourceCommand{
-		Name:            args.Name,
-		Type:            args.Type,
-		URL:             args.URL,
-		Access:          models.DsAccess(dsAccess),
-		Database:        args.Database,
-		User:            args.User,
-		BasicAuth:       args.BasicAuth,
-		BasicAuthUser:   args.BasicAuthUser,
-		WithCredentials: args.WithCredentials,
-		IsDefault:       args.IsDefault,
-		JSONData:        models.JSON(args.JSONData),
+		Name:      args.Name,
+		Type:      args.Type,
+		URL:       args.URL,
+		Access:    models.DsAccess(dsAccess),
+		Database:  args.Database,
+		BasicAuth: args.BasicAuth,
+		IsDefault: args.IsDefault,
+		JSONData:  models.JSON(args.JSONData),
+		
 	}
 	resp, err := c.Datasources.AddDataSource(body)
 	if err != nil {
@@ -178,6 +174,9 @@ func createDatasource(ctx context.Context, args CreateDatasourceParams) (*mcp.Ca
 	}
 	if p.Datasource != nil {
 		result.UID = p.Datasource.UID
+	}
+	if credentialViolationReason != "" {
+		return credentialCreatedWithRedirectResult(result, credentialViolationReason, datasourceConfigPageURL(ctx, result.UID)), nil
 	}
 	b, err := json.Marshal(result)
 	if err != nil {
@@ -227,7 +226,7 @@ var ListDatasources = mcpgrafana.MustTool(
 
 var CreateDatasource = mcpgrafana.MustTool(
 	"create_datasource",
-	"Create a new datasource in Grafana. Returns the created datasource details including its UID. Does not support adding credentials or PII and should never ask for authentication options. If credentials are detected, remind the user to rotate and revoke them to keep them safe.",
+	"Create a new datasource in Grafana. Returns the created datasource details including its UID. Does not support adding credentials or PII and should never ask for authentication options. If credentials are detected, remind the user to rotate and revoke them to keep them safe. Must never call add_authentication_to_datasource from this tool.",
 	createDatasource,
 	mcp.WithTitleAnnotation("Create datasource"),
 	mcp.WithIdempotentHintAnnotation(false),

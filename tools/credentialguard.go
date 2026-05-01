@@ -220,3 +220,35 @@ func credentialViolationResult(reason, configURL string) *mcp.CallToolResult {
 	}
 	return &mcp.CallToolResult{Content: content, IsError: true}
 }
+
+// credentialCreatedWithRedirectResult builds a *mcp.CallToolResult for a datasource
+// that was successfully created but had credential fields stripped. It attempts to open the
+// datasource edit page in the browser and includes a resource_link pointing to it
+// so the user can enter credentials directly.
+func credentialCreatedWithRedirectResult(result *CreateDatasourceResult, reason, configURL string) *mcp.CallToolResult {
+	payload := map[string]any{
+		"outcome":                    "created_without_credentials",
+		"reason":                     reason,
+		"credential_policy":          credentialGuardMessage,
+		"message":                    "Datasource was created without credentials. Open the configuration page to enter them.",
+		"datasource":                 result,
+	}
+	// best-effort only for when server is not running remotely.
+	if configURL != "" {
+		payload["configure_credentials_url"] = configURL
+		payload["config_page_opened"] = openBrowser(configURL) == nil
+	}
+	b, _ := json.MarshalIndent(payload, "", "  ")
+	content := []mcp.Content{
+		mcp.TextContent{Type: "text", Text: string(b)},
+	}
+	if configURL != "" {
+		content = append(content, mcp.NewResourceLink(
+			configURL,
+			"grafana-datasource-config",
+			"Configure authentication and secrets in the Grafana UI; this tool does not accept credentials.",
+			"",
+		))
+	}
+	return &mcp.CallToolResult{Content: content}
+}
