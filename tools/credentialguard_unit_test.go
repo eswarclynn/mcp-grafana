@@ -281,9 +281,9 @@ func TestCheckDatasourceCredentials(t *testing.T) {
 			wantOK: true,
 		},
 		{
-			name:   "basicAuth true blocked",
+			name:   "basicAuth true not blocked",
 			args:   CreateDatasourceParams{Name: "test", Type: "prometheus", BasicAuth: true},
-			reason: "basic_auth_enabled_via_mcp_disallowed",
+			wantOK: true,
 		},
 		{
 			name:   "basicAuthUser blocked",
@@ -529,7 +529,7 @@ func TestCredentialCreatedWithRedirectResult(t *testing.T) {
 		dsResult := &CreateDatasourceResult{ID: 99, UID: "my-uid", Name: "My Prometheus", Message: "Datasource added"}
 		result := credentialCreatedWithRedirectResult(
 			dsResult,
-			"basic_auth_enabled_via_mcp_disallowed",
+			"basic_auth_user_via_mcp_disallowed",
 			"https://grafana.example.com/connections/datasources/edit/my-uid",
 		)
 

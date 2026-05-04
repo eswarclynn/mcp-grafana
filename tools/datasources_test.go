@@ -108,11 +108,11 @@ func TestCreateDatasourceTools(t *testing.T) {
 		})
 	})
 
-	t.Run("create datasource - basicAuth blocked", func(t *testing.T) {
+	t.Run("create datasource - basicAuth (flag only) allowed", func(t *testing.T) {
 		ctx := newTestContext()
 
 		toolResult, err := createDatasource(ctx, CreateDatasourceParams{
-			Name:      "should-not-be-created",
+			Name:      "should-be-created",
 			Type:      "prometheus",
 			BasicAuth: true,
 		})
@@ -124,8 +124,6 @@ func TestCreateDatasourceTools(t *testing.T) {
 		require.True(t, ok)
 		var payload map[string]any
 		require.NoError(t, json.Unmarshal([]byte(text.Text), &payload))
-		assert.Equal(t, "created_without_credentials", payload["outcome"])
-		assert.Equal(t, "basic_auth_enabled_via_mcp_disallowed", payload["reason"])
 
 		ds, ok := payload["datasource"].(map[string]any)
 		require.True(t, ok)
