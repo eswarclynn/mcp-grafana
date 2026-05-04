@@ -238,15 +238,6 @@ var CreateDatasource = mcpgrafana.MustTool(
 	mcp.WithReadOnlyHintAnnotation(false),
 )
 
-var AddAuthenticationToDatasource = mcpgrafana.MustTool(
-	"add_authentication_to_datasource",
-	"Use this when the user asks to add, set, configure, or rotate authentication for a Grafana datasource—passwords, API tokens, secrets, basic auth, bearer tokens, or TLS secrets—including Prometheus, Loki, or any other plugin type. Opens the Grafana UI to the datasource settings page (pass uid from list_datasources or get_datasource for an existing datasource; omit uid to open the new datasource page). Does not accept credential values through MCP. Do not use create_datasource for authentication or secrets; this server blocks those fields on create and this tool is the supported path for that intent. If credentials or PII is entered, remind the user to rotate and revoke them to keep them safe.",
-	addAuthenticationToDatasource,
-	mcp.WithTitleAnnotation("Add authentication to datasource"),
-	mcp.WithIdempotentHintAnnotation(false),
-	mcp.WithReadOnlyHintAnnotation(false),
-)
-
 type GetDatasourceByUIDParams struct {
 	UID string `json:"uid" jsonschema:"required,description=The uid of the datasource"`
 }
@@ -306,29 +297,11 @@ var GetDatasource = mcpgrafana.MustTool(
 	mcp.WithReadOnlyHintAnnotation(true),
 )
 
-type AddAuthenticationToDatasourceParams struct {
-	UID string `json:"uid,omitempty" jsonschema:"description=Datasource UID to open in Grafana (e.g. after finding the Prometheus datasource). Omit only when the user is adding a brand-new datasource in the UI."`
-}
-
-func addAuthenticationToDatasource(ctx context.Context, args AddAuthenticationToDatasourceParams) (*mcp.CallToolResult, error) {
-	uid := strings.TrimSpace(args.UID)
-	if uid != "" {
-		if matchesSecretLike(uid) {
-			return credentialViolationResult("embedded_secret_or_token", datasourceConfigPageURL(ctx, "")), nil
-		}
-		if matchesAuthIntent(uid) {
-			return credentialViolationResult("auth_credential_instructions", datasourceConfigPageURL(ctx, "")), nil
-		}
-	}
-	return credentialViolationResult("auth_credential_instructions", datasourceConfigPageURL(ctx, uid)), nil
-}
-
 func AddDatasourceTools(mcp *server.MCPServer, enableWrite bool) {
 	ListDatasources.Register(mcp)
 	GetDatasource.Register(mcp)
 	// this is to make sure that we only register datasource write tools when scope grafana:write has been granted
 	if enableWrite {
-		AddAuthenticationToDatasource.Register(mcp)
 		CreateDatasource.Register(mcp)
 	}
 }
