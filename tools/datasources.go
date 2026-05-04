@@ -149,14 +149,14 @@ func createDatasource(ctx context.Context, args CreateDatasourceParams) (*mcp.Ca
 	}
 	c := mcpgrafana.GrafanaClientFromContext(ctx)
 	body := &models.AddDataSourceCommand{
-		Name:      args.Name,
-		Type:      args.Type,
-		URL:       args.URL,
-		Access:    models.DsAccess(dsAccess),
-		Database:  args.Database,
-		BasicAuth: args.BasicAuth,
-		IsDefault: args.IsDefault,
-		JSONData:  models.JSON(args.JSONData),
+		Name:            args.Name,
+		Type:            args.Type,
+		URL:             args.URL,
+		Access:          models.DsAccess(dsAccess),
+		Database:        args.Database,
+		BasicAuth:       args.BasicAuth,
+		IsDefault:       args.IsDefault,
+		JSONData:        models.JSON(args.JSONData),
 		WithCredentials: args.WithCredentials,
 	}
 	resp, err := c.Datasources.AddDataSourceWithParams(
