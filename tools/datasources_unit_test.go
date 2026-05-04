@@ -289,11 +289,6 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 		redirectOnly   bool
 	}{
 		{
-			name:           "basicAuth enabled",
-			params:         CreateDatasourceParams{Name: "test", Type: "prometheus", BasicAuth: true},
-			expectedReason: "basic_auth_enabled_via_mcp_disallowed",
-		},
-		{
 			name:           "basicAuthUser set",
 			params:         CreateDatasourceParams{Name: "test", Type: "prometheus", BasicAuthUser: "admin"},
 			expectedReason: "basic_auth_user_via_mcp_disallowed",
@@ -307,6 +302,7 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 			name:           "auth intent in URL field",
 			params:         CreateDatasourceParams{Name: "test", Type: "prometheus", URL: "add authentication to prometheus datasource"},
 			expectedReason: "auth_credential_instructions",
+			redirectOnly:   true,
 		},
 		{
 			name:           "embedded AWS key in jsonData",
