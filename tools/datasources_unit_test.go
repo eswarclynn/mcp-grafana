@@ -316,6 +316,12 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 			expectedReason: "embedded_secret_or_token",
 			redirectOnly:   true,
 		},
+		{
+			name:           "basicAuthUser set with embedded AWS key in jsonData",
+			params:         CreateDatasourceParams{Name: "test", Type: "prometheus", BasicAuthUser: "admin", JSONData: map[string]interface{}{"accessKey": "AKIAIOSFODNN7EXAMPLE"}},
+			expectedReason: "embedded_secret_or_token",
+			redirectOnly:   true,
+		},
 	}
 
 	for _, tt := range tests {

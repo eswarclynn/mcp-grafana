@@ -103,11 +103,11 @@ func appendJSONDataStringCandidates(candidates []string, value any) []string {
 // It mirrors DatasourceInputCredentialViolation from mcp-manage-datasources.
 // Returns a reason code or "" if no violation.
 func checkDatasourceCredentials(args CreateDatasourceParams) string {
+	credentialFieldReason := ""
 	if args.BasicAuthUser != "" {
-		return "basic_auth_user_via_mcp_disallowed"
-	}
-	if len(args.SecureJSONData) > 0 {
-		return "secure_json_data_found"
+		credentialFieldReason = "basic_auth_user_via_mcp_disallowed"
+	} else if len(args.SecureJSONData) > 0 {
+		credentialFieldReason = "secure_json_data_found"
 	}
 
 	// Collect all string field values and jsonData string values for scanning.
@@ -126,7 +126,7 @@ func checkDatasourceCredentials(args CreateDatasourceParams) string {
 			return "embedded_secret_or_token"
 		}
 	}
-	return ""
+	return credentialFieldReason
 }
 
 // datasourceConfigPageURL builds the Grafana UI URL for datasource configuration.

@@ -296,6 +296,16 @@ func TestCheckDatasourceCredentials(t *testing.T) {
 			reason: "secure_json_data_found",
 		},
 		{
+			name:   "jsonData secret overrides basicAuthUser",
+			args:   CreateDatasourceParams{Name: "test", Type: "prometheus", BasicAuthUser: "user", JSONData: map[string]interface{}{"accessKey": "AKIAIOSFODNN7EXAMPLE"}},
+			reason: "embedded_secret_or_token",
+		},
+		{
+			name:   "jsonData secret overrides secureJsonData",
+			args:   CreateDatasourceParams{Name: "test", Type: "prometheus", SecureJSONData: map[string]string{"token": "abc"}, JSONData: map[string]interface{}{"accessKey": "AKIAIOSFODNN7EXAMPLE"}},
+			reason: "embedded_secret_or_token",
+		},
+		{
 			name:   "auth intent in name blocked",
 			args:   CreateDatasourceParams{Name: "add authentication to grafana datasource", Type: "prometheus"},
 			reason: "auth_credential_instructions",
