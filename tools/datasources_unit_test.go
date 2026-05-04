@@ -299,6 +299,11 @@ func TestCreateDatasource_CredentialViolation(t *testing.T) {
 			expectedReason: "secure_json_data_found",
 		},
 		{
+			name:           "basicAuthUser and secureJsonData present",
+			params:         CreateDatasourceParams{Name: "test", Type: "prometheus", BasicAuthUser: "admin", SecureJSONData: map[string]string{"password": "s3cr3t"}},
+			expectedReason: "basic_auth_user_via_mcp_disallowed,secure_json_data_found",
+		},
+		{
 			name:           "auth intent in URL field",
 			params:         CreateDatasourceParams{Name: "test", Type: "prometheus", URL: "add authentication to prometheus datasource"},
 			expectedReason: "auth_credential_instructions",

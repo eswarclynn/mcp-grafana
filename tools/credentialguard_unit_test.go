@@ -296,6 +296,11 @@ func TestCheckDatasourceCredentials(t *testing.T) {
 			reason: "secure_json_data_found",
 		},
 		{
+			name:   "basicAuthUser and secureJsonData both reported",
+			args:   CreateDatasourceParams{Name: "test", Type: "prometheus", BasicAuthUser: "user", SecureJSONData: map[string]string{"token": "abc"}},
+			reason: "basic_auth_user_via_mcp_disallowed,secure_json_data_found",
+		},
+		{
 			name:   "jsonData secret overrides basicAuthUser",
 			args:   CreateDatasourceParams{Name: "test", Type: "prometheus", BasicAuthUser: "user", JSONData: map[string]interface{}{"accessKey": "AKIAIOSFODNN7EXAMPLE"}},
 			reason: "embedded_secret_or_token",
