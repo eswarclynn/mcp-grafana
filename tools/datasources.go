@@ -154,6 +154,7 @@ func createDatasource(ctx context.Context, args CreateDatasourceParams) (*mcp.Ca
 		URL:       args.URL,
 		Access:    models.DsAccess(dsAccess),
 		Database:  args.Database,
+		User:      args.User,
 		BasicAuth: args.BasicAuth,
 		IsDefault: args.IsDefault,
 		JSONData:  models.JSON(args.JSONData),
