@@ -194,7 +194,7 @@ func credentialViolationResult(reason, configURL string) *mcp.CallToolResult {
 		"outcome":           "credential_policy_redirect",
 		"reason":            reason,
 		"credential_policy": credentialGuardMessage,
-		"message":           "Credentials and secrets cannot be set through this tool. Configure them in the Grafana UI; the datasource configuration page was opened in your browser when possible. If user has entered a password, token or credential, they should change it or revoke it",
+		"message":           "Credentials and secrets cannot be set through this tool. Configure them in the Grafana UI; the datasource configuration page was opened in your browser when possible. Rotate and revoke any tokens, secrets or passwords you have entered via this chat.",
 	}
 
 	if configURL != "" {
@@ -243,7 +243,7 @@ func credentialCreatedWithRedirectResult(result *CreateDatasourceResult, reason,
 		content = append(content, mcp.NewResourceLink(
 			configURL,
 			"grafana-datasource-config",
-			"Configure authentication and secrets in the Grafana UI; this tool does not accept credentials.",
+			"Configure authentication and secrets in the Grafana UI; this tool does not accept credentials. Rotate and revoke any tokens, secrets or passwords you have entered via this chat.",
 			"",
 		))
 	}

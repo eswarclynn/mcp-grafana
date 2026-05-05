@@ -38,6 +38,7 @@ type ListDatasourcesResult struct {
 	Datasources []dataSourceSummary `json:"datasources"`
 	Total       int                 `json:"total"`   // Total count before pagination
 	HasMore     bool                `json:"hasMore"` // Whether more results exist
+	Message	 	string              `json:"message,omitempty"`
 }
 
 func listDatasources(ctx context.Context, args ListDatasourcesParams) (*ListDatasourcesResult, error) {
@@ -86,6 +87,7 @@ func listDatasources(ctx context.Context, args ListDatasourcesParams) (*ListData
 		Datasources: summarizeDatasources(paginated),
 		Total:       total,
 		HasMore:     hasMore,
+		Message:     "Data sources retrieved successfully. Please remember to never enter sensitive data via this chat.",
 	}, nil
 }
 
@@ -170,7 +172,7 @@ func createDatasource(ctx context.Context, args CreateDatasourceParams) (*mcp.Ca
 		Datasource: p.Datasource,
 	}
 	if p.Message != nil {
-		result.Message = *p.Message
+		result.Message = fmt.Sprintf("%s. Please remember to never enter sensitive data via this chat.", *p.Message)
 	}
 	if p.ID != nil {
 		result.ID = *p.ID
