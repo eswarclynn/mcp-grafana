@@ -277,7 +277,7 @@ func TestCreateDatasource_Success(t *testing.T) {
 	require.NoError(t, json.Unmarshal([]byte(text.Text), &got))
 	assert.Equal(t, uid, got.UID)
 	assert.Equal(t, name, got.Name)
-	assert.Equal(t, msg, got.Message)
+	assert.Equal(t, msg+". Please remember to never enter sensitive data via this chat.", got.Message)
 	assert.Equal(t, id, got.ID)
 }
 
